@@ -1,0 +1,42 @@
+services:
+  fit:
+    image: perso/my-python-base:0.1
+    command: "sources/app/fit_markov_model.py"
+    env_file:
+      - 'variables.env'
+    volumes:
+      - ../../data:/code/data
+
+  simulation:
+    image: perso/my-python-base:0.1
+    command: "sources/app/run_simulations.py"
+    env_file:
+      - 'variables.env'
+    volumes:
+      - ../../data:/code/data
+    depends_on:
+      fit:
+        condition: service_completed_successfully
+
+  viz:
+    image: perso/my-python-base:0.1
+    command: "sources/app/generate_visualizations.py"
+    env_file:
+      - 'variables.env'
+    volumes:
+      - ../../data:/code/data
+    depends_on:
+      simulation:
+        condition: service_completed_successfully
+
+  api:
+    image: perso/my-python-api:0.1
+    env_file:
+      - 'variables.env'
+    volumes:
+      - ../../data:/code/data
+    ports:
+      - "80:80"
+    depends_on:
+      simulation:
+        condition: service_completed_successfully
